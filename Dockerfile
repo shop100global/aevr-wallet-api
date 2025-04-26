@@ -1,3 +1,5 @@
+# syntax = docker/dockerfile:1.2
+
 FROM node:lts as builder
 
 # Create app directory
@@ -10,7 +12,9 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run compile
+RUN --mount=type=secret,id=_env,dst=/etc/secrets/.env npm run compile
+
+# RUN npm run compile
 
 FROM node:lts-slim
 
