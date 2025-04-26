@@ -8,11 +8,13 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN npm ci
+# Mount the secret, copy it to project root
+RUN --mount=type=secret,id=_env,dst=/etc/secrets/.env cp /etc/secrets/.env .env && npm ci
 
 COPY . .
 
-RUN --mount=type=secret,id=_env,dst=/etc/secrets/.env npm run compile
+# If needed again during compile step
+RUN --mount=type=secret,id=_env,dst=/etc/secrets/.env cp /etc/secrets/.env .env && npm run compile
 
 # RUN npm run compile
 
