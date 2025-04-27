@@ -43,9 +43,9 @@
     "nanoid": "^5.1.5",
     "nodemailer": "^6.10.1",
     "otp-generator": "^4.0.1",
-    "resend": "^4.2.0",
+    "resend": "^4.4.1",
     "yup": "^1.6.1",
-    "zeptomail": "^6.2.0"
+    "zeptomail": "^6.2.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
