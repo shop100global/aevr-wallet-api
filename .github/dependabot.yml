@@ -12,7 +12,7 @@ updates:
     open-pull-requests-limit: 10
     # Assign someone to review the PR
     assignees:
-      - "miracleonyenma"
+      - "aevrspace"
     # Add labels to the PRs
     labels:
       - "dependencies"
