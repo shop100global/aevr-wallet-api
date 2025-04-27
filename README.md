@@ -25,7 +25,7 @@ The following environment variables have been pre-configured:
 
 - `PORT`: 9872 (Server port)
 - `APP_NAME`: wallet-api
-- `APP_URL`: <http://localhost:9872>
+- `APP_URL`: <https://wallet-api.projects.aevr.space>
 - `MONGO_URI`: Local MongoDB connection
 - `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`: Generated for Web Push notifications
 
@@ -51,14 +51,26 @@ Update the following variables with your Google OAuth credentials:
 
 ## Authentication
 
-This API uses JWT-based authentication. Most endpoints require an `Authorization` header with a valid access token.
+This API uses **JWT-based authentication**. Most endpoints require an `Authorization` header with a valid access token. Additionally, to interact with the API, you must include a valid API key in the `x-api-key` header.
+
+### Headers Required for Requests
+
+- **Authorization**: Include a valid JWT access token.
+- **x-api-key**: Include a valid API key.
+
+Example:
+
+```http
+Authorization: Bearer <access_token>
+x-api-key: <api_key>
+```
 
 ### Base URL
 
 The GraphQL API is accessible at:
 
 ```
-http://localhost:9872/graphql
+https://wallet-api.projects.aevr.space/graphql
 ```
 
 ### Authentication Flow
@@ -120,9 +132,70 @@ Response:
 }
 ```
 
-#### 2. Login
+#### 2. Verify Email with OTP
 
-Authenticate a user and retrieve access and refresh tokens:
+Before logging in, users must verify their email address using a one-time password (OTP). Use the following mutations to request and verify an OTP:
+
+**Request OTP**:
+
+```graphql
+mutation SendOTP($input: SendOTPInput!) {
+  sendOTP(input: $input)
+}
+```
+
+Input:
+
+```json
+{
+  "input": {
+    "email": "john.doe@example.com"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "sendOTP": "OTP sent to john.doe@example.com successfully"
+  }
+}
+```
+
+**Verify OTP**:
+
+```graphql
+mutation VerifyOTP($input: VerifyOTPInput!) {
+  verifyOTP(input: $input)
+}
+```
+
+Input:
+
+```json
+{
+  "input": {
+    "email": "john.doe@example.com",
+    "otp": "123456"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "verifyOTP": true
+  }
+}
+```
+
+#### 3. Login
+
+Once the email is verified, users can log in and retrieve access and refresh tokens:
 
 ```graphql
 mutation Login($input: LoginInput!) {
@@ -177,7 +250,7 @@ Response:
 }
 ```
 
-#### 3. Using Authentication Tokens
+#### 4. Using Authentication Tokens
 
 Include the access token in the `Authorization` header for protected requests:
 
@@ -185,7 +258,7 @@ Include the access token in the `Authorization` header for protected requests:
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-#### 4. Refresh Token
+#### 5. Refresh Token
 
 When an access token expires, refresh it using:
 
@@ -217,7 +290,7 @@ Response:
 }
 ```
 
-#### 5. Get Current User
+#### 6. Get Current User
 
 Retrieve the currently authenticated user's details:
 
@@ -370,69 +443,6 @@ Response:
 }
 ```
 
-### OTP Verification
-
-#### 1. Send OTP
-
-Send a one-time password to a user's email:
-
-```graphql
-mutation SendOTP($input: SendOTPInput!) {
-  sendOTP(input: $input)
-}
-```
-
-Input:
-
-```json
-{
-  "input": {
-    "email": "john.doe@example.com"
-  }
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "sendOTP": "OTP sent to john.doe@example.com successfully"
-  }
-}
-```
-
-#### 2. Verify OTP
-
-Verify the OTP sent to a user's email:
-
-```graphql
-mutation VerifyOTP($input: VerifyOTPInput!) {
-  verifyOTP(input: $input)
-}
-```
-
-Input:
-
-```json
-{
-  "input": {
-    "email": "john.doe@example.com",
-    "otp": "123456"
-  }
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "verifyOTP": true
-  }
-}
-```
-
 ### Roles and Permissions
 
 Get all available roles:
@@ -517,7 +527,7 @@ Response:
 
 ## GraphQL Playground
 
-Access the GraphQL playground at: <http://localhost:9872/graphql>
+Access the GraphQL playground at: <https://wallet-api.projects.aevr.space/graphql>
 
 ## Common Errors
 
