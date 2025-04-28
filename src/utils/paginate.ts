@@ -1,6 +1,6 @@
 import { Model, FilterQuery, SortOrder } from "mongoose";
 
-interface Pagination {
+export interface Pagination {
   page?: number;
   limit?: number;
 }

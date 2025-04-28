@@ -4,6 +4,7 @@ import otpTypeDefs from "./otp.js";
 import passwordResetTypeDefs from "./passwordReset.js";
 import roleTypeDefs from "./role.js";
 import userTypeDefs from "./user.js";
+import userWalletTypeDefs from "./userWallet.js";
 
 const globalTypeDefs = `#graphql
   scalar JSON
@@ -29,6 +30,7 @@ const typeDefs = `
   ${apiKeyTypeDefs}
   ${googleAuthTypeDefs}
   ${passwordResetTypeDefs}
+  ${userWalletTypeDefs}
 `;
 
 export default typeDefs;
