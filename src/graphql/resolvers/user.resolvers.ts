@@ -9,6 +9,7 @@ import {
 } from "../../utils/token.js";
 import { checkUser } from "../../utils/user.js";
 import paginateCollection from "../../utils/paginate.js";
+import { CustomError } from "../../services/error.services.js";
 
 const { sign } = pkg;
 config();
@@ -24,7 +25,7 @@ const userResolvers = {
       } catch (error) {
         console.log("Query.users error", error);
 
-        throw error;
+        throw new CustomError(error, 400);
       }
     },
     user: async (parent, args, context, info) => {
