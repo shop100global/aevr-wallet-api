@@ -7,7 +7,7 @@ import { UserWalletDocument } from "../../types/userWallet.js";
  */
 export namespace Filters {
   export interface UserWalletFilterOptions {
-    id?: string;
+    accountIds?: string[];
     userId?: string;
     name?: string;
     symbol?: string;
@@ -56,8 +56,14 @@ export const UserWalletFilters = ({
   // Construct the filter object
   const constructedFilters: FilterQuery<UserWalletDocument> = {
     // Basic filters
-    ...(filters.id &&
-      (isValidObjectId(filters.id) ? { _id: filters.id } : { id: filters.id })),
+    // ...(filters.id &&
+    //   (isValidObjectId(filters.id) ? { _id: filters.id } : { id: filters.id })),
+    ...(filters.accountIds &&
+      filters.accountIds.length > 0 && {
+        sourceAccountId: {
+          $in: filters.accountIds.map((id) => new mongoose.Types.ObjectId(id)),
+        },
+      }),
 
     // User relation filter
     ...(filters.userId && {

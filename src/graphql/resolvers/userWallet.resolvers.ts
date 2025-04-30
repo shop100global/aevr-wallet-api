@@ -1,3 +1,5 @@
+// ./src/graphql/resolvers/userWallet.resolvers.ts
+
 import User from "../../models/user.model.js";
 import { WalletService } from "../../services/userWallet.services.js";
 import { Filters } from "../../utils/filters/index.js";
@@ -80,7 +82,7 @@ export const userWalletResolvers = {
           phone: "000000000",
           symbols,
           networks,
-          metadata,
+          metadata: { ...metadata, userId },
         });
 
         return wallets;
