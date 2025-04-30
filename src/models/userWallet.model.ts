@@ -1,7 +1,10 @@
 // ./src/models/userWallet.model.ts
 
 import { model, Schema } from "mongoose";
-import { UserWalletDocument, UserWalletModel } from "../types/userWallet.js";
+import {
+  UserWalletDocument,
+  UserWalletModel,
+} from "../types/userWallet/index.js";
 
 const userWalletSchema = new Schema<UserWalletDocument, UserWalletModel>(
   {

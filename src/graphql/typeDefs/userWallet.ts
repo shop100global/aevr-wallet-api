@@ -1,4 +1,11 @@
 const userWalletTypeDefs = `#graphql
+  type BalanceResult {
+    totalBalance: Float
+    availableBalance: Float
+    pendingCredits: Float
+    pendingDebits: Float
+  }
+
   type Account {
     address: String
     key: JSON
@@ -23,6 +30,7 @@ const userWalletTypeDefs = `#graphql
     ownerId: String
     parentWallet: String
     sourceAccountId: String
+    balance: BalanceResult
     createdAt: String
     updatedAt: String
   }

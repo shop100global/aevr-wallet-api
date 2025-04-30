@@ -1,6 +1,6 @@
 // src/utils/filters.ts
 import mongoose, { FilterQuery } from "mongoose";
-import { UserWalletDocument } from "../../types/userWallet.js";
+import { UserWalletDocument } from "../../types/userWallet/index.js";
 
 /**
  * Type for all filter options used in the wallet service

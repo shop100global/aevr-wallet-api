@@ -22,6 +22,9 @@ export interface Pagination {
 }
 
 const resolvers = {
+  UserWallet: {
+    ...userWalletResolvers.UserWallet,
+  },
   Query: {
     ...userResolvers.Query,
     ...roleResolvers.Query,
