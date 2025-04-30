@@ -1,3 +1,5 @@
+// ./src/utils/paginate.ts
+
 import { Model, FilterQuery, SortOrder } from "mongoose";
 
 export interface Pagination {
@@ -47,6 +49,7 @@ const paginateCollection = async <T>(
     .skip(skip)
     .limit(limit)
     .populate(options?.populate || "")
+
     .sort(sort);
 
   const total = await collection.countDocuments(options?.filter || {});

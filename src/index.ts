@@ -18,7 +18,10 @@ import {
   validateApiKey,
   ApiKeyRequest,
 } from "./middlewares/apiKey.middleware.js";
-import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware.js";
+import {
+  errorMiddleware,
+  notFoundMiddleware,
+} from "./middlewares/error.middleware.js";
 import { ApiError } from "./services/error.services.js";
 interface MyContext {
   token?: string;
@@ -108,9 +111,11 @@ app.get("/health", (req, res) => {
 app.use(notFoundMiddleware);
 
 // Global error handler - must be last
-app.use((err: Error | ApiError, req: Request, res: Response, next: NextFunction) => {
-  errorMiddleware(err, req, res, next);
-});
+app.use(
+  (err: Error | ApiError, req: Request, res: Response, next: NextFunction) => {
+    errorMiddleware(err, req, res, next);
+  }
+);
 
 // connect database
 connectDB();

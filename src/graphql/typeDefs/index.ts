@@ -23,6 +23,17 @@ const globalTypeDefs = `#graphql
     hasNextPage: Boolean
     hasPrevPage: Boolean
   }
+
+  input SortInput {
+    by: String
+    direction: SortDirection
+  }
+
+  enum SortDirection {
+    asc
+    desc
+  }
+
 `;
 
 const typeDefs = `

@@ -51,9 +51,16 @@ const userTypeDefs = `#graphql
     accessToken: String!
   }
 
+  input UserFiltersInput {
+    search: String
+    role: ID
+    emailVerified: Boolean
+  }
+
+
 
   type Query {
-    users(pagination: Pagination): UserData
+    users(pagination: Pagination, filters: UserFiltersInput, sort: SortInput): UserData
     user(id: ID!): User
     me: User
   }
