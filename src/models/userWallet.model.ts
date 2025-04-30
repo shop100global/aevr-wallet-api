@@ -1,3 +1,5 @@
+// ./src/models/userWallet.model.ts
+
 import { model, Schema } from "mongoose";
 import { UserWalletDocument, UserWalletModel } from "../types/userWallet.js";
 

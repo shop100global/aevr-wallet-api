@@ -3,6 +3,7 @@ import googleAuthTypeDefs from "./google.auth.js";
 import otpTypeDefs from "./otp.js";
 import passwordResetTypeDefs from "./passwordReset.js";
 import roleTypeDefs from "./role.js";
+import { transferTypeDefs } from "./transfer.js";
 import userTypeDefs from "./user.js";
 import userWalletTypeDefs from "./userWallet.js";
 
@@ -19,6 +20,8 @@ const globalTypeDefs = `#graphql
     limit: Int
     pages: Int
     total: Int
+    hasNextPage: Boolean
+    hasPrevPage: Boolean
   }
 `;
 
@@ -31,6 +34,7 @@ const typeDefs = `
   ${googleAuthTypeDefs}
   ${passwordResetTypeDefs}
   ${userWalletTypeDefs}
+  ${transferTypeDefs}
 `;
 
 export default typeDefs;

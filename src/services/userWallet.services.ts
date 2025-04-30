@@ -5,8 +5,9 @@ import { Pay100, CreateSubAccountData, Account } from "@100pay-hq/100pay.js";
 import { Types } from "mongoose";
 import { UserWalletDocument } from "../types/userWallet.js";
 import UserWallet from "../models/userWallet.model.js";
-import { Filters } from "../utils/filters/index.js";
+import { Filters, UserWalletFilters } from "../utils/filters/index.js";
 import paginateCollection, { Pagination } from "../utils/paginate.js";
+import { logger } from "@untools/logger";
 
 export class WalletService {
   private client: Pay100;
@@ -66,8 +67,6 @@ export class WalletService {
 
       // Create subaccount via 100Pay API
       const response = await this.client.subaccounts.create(subaccountData);
-
-      console.log({ response });
 
       // Save each account (wallet) to our database
       const savedWallets = await Promise.all(
@@ -150,6 +149,7 @@ export class WalletService {
     filter?: Filters.UserWalletFilterOptions;
     pagination?: Pagination;
   }) {
+    const constructedFilters = UserWalletFilters({ filters: filter });
     return paginateCollection(
       UserWallet,
       {
@@ -157,7 +157,7 @@ export class WalletService {
         limit: pagination.limit,
       },
       {
-        filter,
+        filter: constructedFilters,
         populate: "user",
       }
     );
