@@ -10,7 +10,6 @@ import {
 import UserWallet from "../models/userWallet.model.js";
 import { Filters, UserWalletFilters } from "../utils/filters/index.js";
 import paginateCollection, { Pagination } from "../utils/paginate.js";
-import { logger } from "@untools/logger";
 import { WalletBalanceUtil } from "../utils/userWallet/balance.js";
 
 export class WalletService {
