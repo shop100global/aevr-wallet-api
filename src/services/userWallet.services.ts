@@ -3,14 +3,19 @@
 // src/services/walletService.ts
 import { Pay100, CreateSubAccountData, Account } from "@100pay-hq/100pay.js";
 import { Types } from "mongoose";
-import { UserWalletDocument } from "../types/userWallet.js";
+import {
+  BalanceResult,
+  UserWalletDocument,
+} from "../types/userWallet/index.js";
 import UserWallet from "../models/userWallet.model.js";
 import { Filters, UserWalletFilters } from "../utils/filters/index.js";
 import paginateCollection, { Pagination } from "../utils/paginate.js";
 import { logger } from "@untools/logger";
+import { WalletBalanceUtil } from "../utils/userWallet/balance.js";
 
 export class WalletService {
   private client: Pay100;
+  private utils: WalletBalanceUtil;
 
   constructor(publicKey: string, secretKey: string, baseUrl?: string) {
     this.client = new Pay100({
@@ -18,6 +23,7 @@ export class WalletService {
       secretKey,
       baseUrl,
     });
+    this.utils = new WalletBalanceUtil(this.client);
   }
 
   /**
@@ -219,6 +225,48 @@ export class WalletService {
       });
     } catch (error) {
       console.error("Conversion preview failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gets the balance of a specific wallet
+   *
+   * @param userId - User's MongoDB ObjectId
+   * @param symbol - Cryptocurrency symbol (e.g., "BTC")
+   * @returns Wallet balance information
+   */
+  async getWalletBalance(
+    userId: string | Types.ObjectId,
+    symbol: string
+  ): Promise<BalanceResult> {
+    try {
+      const wallet = await this.getUserWalletBySymbol(userId, symbol);
+      if (!wallet) {
+        throw new Error(`Wallet with symbol ${symbol} not found`);
+      }
+
+      return this.utils.calculateBalance(wallet.sourceAccountId, symbol);
+    } catch (error) {
+      console.error("Failed to get wallet balance:", error);
+      throw error;
+    }
+  }
+  /**
+   * Gets the balance of a specific wallet by account ID
+   *
+   * @param accountId - 100Pay account ID
+   * @param symbol - Cryptocurrency symbol (e.g., "BTC")
+   * @returns Wallet balance information
+   */
+  async getWalletBalanceByAccountId(
+    accountId: string,
+    symbol: string
+  ): Promise<BalanceResult> {
+    try {
+      return this.utils.calculateBalance(accountId, symbol, false);
+    } catch (error) {
+      console.error("Failed to get wallet balance:", error);
       throw error;
     }
   }

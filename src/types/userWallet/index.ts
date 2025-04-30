@@ -25,3 +25,5 @@ export interface UserWallet {
 export interface UserWalletDocument extends UserWallet, Document {}
 
 export interface UserWalletModel extends Model<UserWalletDocument> {}
+
+export * from "./balance.js";

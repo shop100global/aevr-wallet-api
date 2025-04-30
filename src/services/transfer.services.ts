@@ -9,7 +9,7 @@ import {
 import { Types } from "mongoose";
 import UserWallet from "../models/userWallet.model.js";
 import { WalletService } from "./userWallet.services.js";
-import { UserWalletDocument } from "../types/userWallet.js";
+import { UserWalletDocument } from "../types/userWallet/index.js";
 import { logger } from "@untools/logger";
 
 /**

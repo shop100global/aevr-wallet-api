@@ -22,6 +22,23 @@ const walletService = new WalletService(
 );
 
 export const userWalletResolvers = {
+  UserWallet: {
+    /**
+     * Get the balance of a wallet
+     */
+    balance: async (parent, args, context, info) => {
+      try {
+        const balance = await walletService.getWalletBalanceByAccountId(
+          parent.accountId,
+          parent.symbol
+        );
+        return balance;
+      } catch (error) {
+        console.log("Query.balance error", error);
+        throw error;
+      }
+    },
+  },
   Query: {
     /**
      * Get wallets for users with filtering and pagination
