@@ -18,7 +18,8 @@ interface UserWalletBySymbolArgs {
 // Initialize the wallet service with your 100Pay API keys
 const walletService = new WalletService(
   process.env.PAY100_PUBLIC_KEY || "",
-  process.env.PAY100_SECRET_KEY || ""
+  process.env.PAY100_SECRET_KEY || "",
+  "http://localhost:3001"
 );
 
 export const userWalletResolvers = {
@@ -78,6 +79,19 @@ export const userWalletResolvers = {
         return wallet;
       } catch (error) {
         console.log("Query.getUserWalletBySymbol error", error);
+        throw error;
+      }
+    },
+    /**
+     * Get supported cryptocurrencies
+     */
+    getSupportedCryptocurrencies: async (parent, args, context, info) => {
+      try {
+        const supportedWallets =
+          await walletService.getSupportedCryptocurrencies();
+        return supportedWallets;
+      } catch (error) {
+        console.log("Query.getSupportedCryptocurrencies error", error);
         throw error;
       }
     },

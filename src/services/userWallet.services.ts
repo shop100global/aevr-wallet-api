@@ -270,4 +270,18 @@ export class WalletService {
       throw error;
     }
   }
+
+  /**
+   * Gets the list of supported cryptocurrencies
+   */
+  async getSupportedCryptocurrencies() {
+    try {
+      const response = await this.client.wallet.getSupportedWallets();
+
+      return response.data;
+    } catch (error) {
+      console.error("Failed to get supported cryptocurrencies:", error);
+      throw error;
+    }
+  }
 }
