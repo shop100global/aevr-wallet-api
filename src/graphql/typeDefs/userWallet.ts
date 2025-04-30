@@ -6,6 +6,20 @@ const userWalletTypeDefs = `#graphql
     pendingDebits: Float
   }
 
+  type SupportedWallet {
+    name: String
+    symbol: String
+    decimals: String
+    networks: [String]
+    hotwallet: String
+    balance: JSON
+    account: JSON
+    fee: JSON
+    contractAddress: String
+    contract: String
+    logo: String
+  }
+
   type Account {
     address: String
     key: JSON
@@ -63,6 +77,7 @@ const userWalletTypeDefs = `#graphql
   type Query {
     getUserWallets(filter: UserWalletFilter, pagination: Pagination): UserWalletsData
     getUserWalletBySymbol(userId: ID, symbol: String): UserWallet
+    getSupportedCryptocurrencies: [SupportedWallet]
   }
 
   type Mutation {
