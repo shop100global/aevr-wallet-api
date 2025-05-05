@@ -18,8 +18,7 @@ interface UserWalletBySymbolArgs {
 // Initialize the wallet service with your 100Pay API keys
 const walletService = new WalletService(
   process.env.PAY100_PUBLIC_KEY || "",
-  process.env.PAY100_SECRET_KEY || "",
-  "http://localhost:3001"
+  process.env.PAY100_SECRET_KEY || ""
 );
 
 export const userWalletResolvers = {
