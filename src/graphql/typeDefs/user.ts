@@ -69,7 +69,7 @@ const userTypeDefs = `#graphql
     register(input: RegisterInput!): RegisterData
     login(input: LoginInput!): AuthData
     refreshToken(token: String!): RefreshPayload!
-    updateUser(input: UpdateUserInput!): User
+    updateUser(id: ID, input: UpdateUserInput!): User
     deleteUser(id: ID!): User
   }
 `;

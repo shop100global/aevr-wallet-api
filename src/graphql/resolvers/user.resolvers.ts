@@ -7,7 +7,7 @@ import {
   createRefreshToken,
   verifyRefreshToken,
 } from "../../utils/token.js";
-import { checkUser } from "../../utils/user.js";
+import { checkUser, checkUserIsAdmin } from "../../utils/user.js";
 import paginateCollection from "../../utils/paginate.js";
 import {
   InternalServerError,
@@ -204,10 +204,20 @@ const userResolvers = {
           throw new BadRequestError("No update data provided");
         }
 
-        const updatedUser = await User.findByIdAndUpdate(user.id, args.input, {
-          new: true,
-          runValidators: true,
-        });
+        const providedId = args.id;
+
+        if (providedId) {
+          checkUserIsAdmin(userId);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+          providedId ? providedId : user.id,
+          args.input,
+          {
+            new: true,
+            runValidators: true,
+          }
+        );
 
         if (!updatedUser) {
           throw new NotFoundError("User not found");
@@ -221,10 +231,12 @@ const userResolvers = {
     },
     deleteUser: async (parent, args, context, info) => {
       try {
-        const id = args.id || context.user?.data?.id;
+        const id = args.id;
         if (!id) {
           throw new UnauthorizedError("User ID required");
         }
+
+        await checkUserIsAdmin(context?.user?.data?.id);
 
         const deletedUser = await User.findByIdAndDelete(id);
         if (!deletedUser) {
