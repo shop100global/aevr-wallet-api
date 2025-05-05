@@ -36,7 +36,13 @@ export const userWalletResolvers = {
         return balance;
       } catch (error) {
         console.log("Query.balance error", error);
-        throw error;
+        return {
+          totalBalance: 0,
+          availableBalance: 0,
+          pendingCredits: 0,
+          pendingDebits: 0,
+          transactions: [],
+        };
       }
     },
   },
