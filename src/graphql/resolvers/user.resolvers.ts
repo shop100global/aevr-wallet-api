@@ -98,8 +98,6 @@ const userResolvers = {
           filterQuery["emailVerified"] = filters.emailVerified;
         }
 
-        logger.debug("Filter Query", { filterQuery, args });
-
         const paginatedUsers = await paginateCollection(User, pagination, {
           filter: filterQuery,
           populate: "roles",
