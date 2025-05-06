@@ -19,9 +19,16 @@ import {
 } from "../../services/error.services.js";
 import roleModel from "../../models/role.model.js";
 import { logger } from "@untools/logger";
+import { WalletService } from "../../services/userWallet.services.js";
 
 const { sign } = pkg;
 config();
+
+// Initialize the wallet service with your 100Pay API keys
+const walletService = new WalletService(
+  process.env.PAY100_PUBLIC_KEY || "",
+  process.env.PAY100_SECRET_KEY || ""
+);
 
 const userResolvers = {
   User: {
@@ -37,6 +44,25 @@ const userResolvers = {
         return populatedRoles;
       } catch (error) {
         console.log("User.roles error", error);
+        throw ErrorHandler.handleError(error);
+      }
+    },
+    wallets: async (parent, args, context, info) => {
+      try {
+        const userId = context?.user?.data?.id;
+        if (!userId) throw new Error("User not found");
+
+        const filter = args.filter || {};
+        const pagination = args.pagination || {};
+
+        const wallets = await walletService.getFilteredUserWallets({
+          filter: { ...filter, userId: parent.id },
+          pagination,
+        });
+
+        return wallets;
+      } catch (error) {
+        console.log("Query.wallets error", error);
         throw ErrorHandler.handleError(error);
       }
     },
@@ -236,8 +262,10 @@ const userResolvers = {
           throw new UnauthorizedError("User ID required");
         }
 
-        await checkUserIsAdmin(context?.user?.data?.id);
-
+        const userIsAdmin = await checkUserIsAdmin(context?.user?.data?.id);
+        if (!userIsAdmin) {
+          throw new UnauthorizedError("User is not an admin");
+        }
         const deletedUser = await User.findByIdAndDelete(id);
         if (!deletedUser) {
           throw new NotFoundError(`User with ID ${id} not found`);

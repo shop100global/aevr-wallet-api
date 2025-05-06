@@ -6,6 +6,7 @@ import { WalletService } from "../../services/userWallet.services.js";
 import { Filters } from "../../utils/filters/index.js";
 import { PaginationInput } from "./index.js";
 import { RatesService } from "../../services/rates.services.js";
+import { checkUserIsAdmin } from "../../utils/user.js";
 
 interface WalletQueryArgs {
   filter?: Filters.UserWalletFilterOptions;
@@ -107,8 +108,10 @@ export const userWalletResolvers = {
         const filter = args.filter || {};
         const pagination = args.pagination || {};
 
+        const userIsAdmin = await checkUserIsAdmin(userId);
+
         const wallets = await walletService.getFilteredUserWallets({
-          filter: { ...filter, userId },
+          filter: { ...filter, userId: userIsAdmin ? filter.userId : userId },
           pagination,
         });
 
