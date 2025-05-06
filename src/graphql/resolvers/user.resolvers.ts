@@ -264,6 +264,11 @@ const userResolvers = {
         if (!userIsAdmin) {
           throw new UnauthorizedError("User is not an admin");
         }
+        const user = await User.findById(id);
+        // cannot delete admin user
+        if (checkUserIsAdmin(user?.id)) {
+          throw new UnauthorizedError("Cannot delete admin user");
+        }
         const deletedUser = await User.findByIdAndDelete(id);
         if (!deletedUser) {
           throw new NotFoundError(`User with ID ${id} not found`);
