@@ -10,7 +10,7 @@ export namespace Filters {
     accountIds?: string[];
     userId?: string;
     name?: string;
-    symbol?: string;
+    symbols?: [string];
     status?: string;
     accountType?: string;
     walletType?: string;
@@ -72,8 +72,8 @@ export const UserWalletFilters = ({
 
     // String fields with case-insensitive regex matching
     ...(filters.name && { name: { $regex: filters.name, $options: "i" } }),
-    ...(filters.symbol && {
-      symbol: { $regex: filters.symbol, $options: "i" },
+    ...(filters.symbols && {
+      symbol: { $in: filters.symbols },
     }),
 
     // Exact match filters

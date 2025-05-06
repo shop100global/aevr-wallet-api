@@ -1,5 +1,6 @@
 // ./src/graphql/resolvers/userWallet.resolvers.ts
 
+import { logger } from "@untools/logger";
 import User from "../../models/user.model.js";
 import { WalletService } from "../../services/userWallet.services.js";
 import { Filters } from "../../utils/filters/index.js";
@@ -29,7 +30,44 @@ export const userWalletResolvers = {
     balance: async (parent, args, context, info) => {
       try {
         const balance = await walletService.getWalletBalanceByAccountId(
-          parent.accountId,
+          parent.sourceAccountId,
+          parent.symbol
+        );
+        return balance;
+      } catch (error) {
+        console.log("Query.balance error", error);
+        return {
+          totalBalance: 0,
+          availableBalance: 0,
+          pendingCredits: 0,
+          pendingDebits: 0,
+          transactions: [],
+        };
+      }
+    },
+  },
+  SupportedWallet: {
+    /**
+     * Get the balance of a wallet
+     */
+    balance: async (parent, args, context, info) => {
+      try {
+        const accountAddresses = parent.accounts.map(
+          (account: { address: string }) => account.address
+        );
+
+        if (accountAddresses.length === 0) {
+          return {
+            totalBalance: 0,
+            availableBalance: 0,
+            pendingCredits: 0,
+            pendingDebits: 0,
+            transactions: [],
+          };
+        }
+
+        const balance = await walletService.getWalletBalanceByAccountAddress(
+          accountAddresses,
           parent.symbol
         );
         return balance;
@@ -84,6 +122,25 @@ export const userWalletResolvers = {
         return wallet;
       } catch (error) {
         console.log("Query.getUserWalletBySymbol error", error);
+        throw error;
+      }
+    },
+    /**
+     * Get supported wallets
+     */
+    getSupportedWallets: async (parent, args, context, info) => {
+      try {
+        const filter = args.filter;
+        const pagination = args.pagination;
+
+        const wallets = await walletService.getSupportedWallets({
+          filter,
+          pagination,
+        });
+
+        return wallets;
+      } catch (error) {
+        console.log("Query.getSupportedWallets error", error);
         throw error;
       }
     },

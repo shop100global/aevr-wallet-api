@@ -1,5 +1,6 @@
 // ./src/utils/paginate.ts
 
+import { logger } from "@untools/logger";
 import { Model, FilterQuery, SortOrder } from "mongoose";
 
 export interface Pagination {

@@ -28,6 +28,9 @@ const resolvers = {
   UserWallet: {
     ...userWalletResolvers.UserWallet,
   },
+  SupportedWallet: {
+    ...userWalletResolvers.SupportedWallet,
+  },
   Query: {
     ...userResolvers.Query,
     ...roleResolvers.Query,
