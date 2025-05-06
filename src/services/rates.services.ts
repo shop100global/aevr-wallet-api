@@ -10,40 +10,14 @@
  * @version 1.0.0
  */
 
-// Define TypeScript interfaces for the API responses
-interface CryptoPrice {
-  symbol: string;
-  price: number;
-  margin: number;
-  updated_price: number;
-  last_updated: string;
-  currency?: string;
-}
-
-interface MarginUpdateResponse {
-  message: string;
-  updated_price: number;
-  margin: number;
-}
-
-interface UpdatePriceResponse {
-  message: string;
-}
-
-interface UpdateSpecificCoinResponse {
-  message: string;
-  price: CryptoPrice;
-}
-
-interface FiatPrice {
-  symbol: string;
-  rate_to_usd: number;
-  last_updated: string;
-}
-
-interface MarginUpdateRequest {
-  margin: number;
-}
+import { logger } from "@untools/logger";
+import {
+  CryptoPrice,
+  FiatPrice,
+  SimpleConversionResult,
+  UpdatePriceResponse,
+  UpdateSpecificCoinResponse,
+} from "../types/rates.js";
 
 const RATES_API_URL = process.env.RATES_API || "";
 const API_KEY = process.env.RATES_API_KEY || "";
@@ -114,7 +88,7 @@ export class RatesService {
     const options: RequestInit = {
       method,
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
+        "x-api-key": `${this.apiKey}`,
         "Content-Type": "application/json",
       },
     };
@@ -159,29 +133,6 @@ export class RatesService {
   }
 
   /**
-   * Update the margin for a specific cryptocurrency symbol
-   *
-   * @param symbol - The symbol of the cryptocurrency (e.g., 'BTC')
-   * @param margin - The new margin value to set
-   * @returns Promise resolving to the margin update response
-   * @throws Error if the API request fails or the symbol is not found
-   */
-  async updateMargin(
-    symbol: string,
-    margin: number
-  ): Promise<MarginUpdateResponse> {
-    const options = this.createRequestOptions("PUT", {
-      margin,
-    } as MarginUpdateRequest);
-    const response = await fetch(
-      `${this.baseUrl}/api/update-margin/${symbol}`,
-      options
-    );
-
-    return this.handleResponse<MarginUpdateResponse>(response);
-  }
-
-  /**
    * Trigger a manual update of all cryptocurrency prices
    *
    * @returns Promise resolving to the update response
@@ -214,7 +165,9 @@ export class RatesService {
    * @returns Promise resolving to an array of fiat currency prices
    */
   async getAllFiatPrices(): Promise<FiatPrice[]> {
-    const response = await fetch(`${this.baseUrl}/api/fiat-prices`);
+    const options = this.createRequestOptions("GET");
+
+    const response = await fetch(`${this.baseUrl}/api/fiat-prices`, options);
     return this.handleResponse<FiatPrice[]>(response);
   }
 
@@ -234,37 +187,61 @@ export class RatesService {
     if (targetCurrency) {
       url.searchParams.append("currency", targetCurrency);
     }
+    const options = this.createRequestOptions("GET");
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), options);
     return this.handleResponse<FiatPrice>(response);
   }
 
   /**
-   * Helper method to calculate the equivalent price in a different fiat currency
+   * Converts an amount from one currency to another using provided exchange rates.
+   * No fees or extra logic applied.
    *
-   * @param amount - The amount to convert
-   * @param fromCurrency - The source currency (e.g., 'USD')
-   * @param toCurrency - The target currency (e.g., 'EUR')
-   * @returns Promise resolving to the converted amount
+   * @param fromSymbol Source currency (e.g., "BTC", "NGN")
+   * @param toSymbol Target currency (e.g., "USD")
+   * @param amount Amount to convert in the source currency
+   * @param rates Array of available exchange rates
+   * @returns Conversion result with rates and converted amount
+   * @throws Error if either rate is missing
    */
-  async convertCurrency(
-    amount: number,
-    fromCurrency: string,
-    toCurrency: string
-  ): Promise<number> {
-    if (fromCurrency === toCurrency) {
-      return amount;
+  async convertCurrency({
+    fromSymbol,
+    toSymbol,
+    amount,
+  }: {
+    fromSymbol: string;
+    toSymbol: string;
+    amount: number;
+  }): Promise<SimpleConversionResult> {
+    logger.info("RatesService.convertCurrency", {
+      fromSymbol,
+      toSymbol,
+      amount,
+    });
+
+    const rates = await this.getAllPrices();
+
+    const fromRate = rates.find(
+      (rate) => rate.symbol.toLowerCase() === fromSymbol.toLowerCase().trim()
+    )?.price;
+    const toRate = rates.find(
+      (rate) => rate.symbol.toLowerCase() === toSymbol.toLowerCase().trim()
+    )?.price;
+
+    if (!fromRate || !toRate) {
+      throw new Error(
+        `Exchange rate not found for ${fromSymbol} or ${toSymbol}`
+      );
     }
 
-    // Get rates for both currencies in USD
-    const fromRate = await this.getFiatPrice(fromCurrency);
-    const toRate = await this.getFiatPrice(toCurrency);
+    const intermediateUSDAmount = amount * fromRate;
+    const convertedAmount = intermediateUSDAmount / toRate;
 
-    // Calculate the conversion
-    // First convert to USD, then to target currency
-    const amountInUsd = amount / fromRate.rate_to_usd;
-    const amountInTargetCurrency = amountInUsd * toRate.rate_to_usd;
-
-    return amountInTargetCurrency;
+    return {
+      convertedAmount,
+      fromRate,
+      toRate,
+      intermediateUSDAmount,
+    };
   }
 }
