@@ -4,6 +4,7 @@ const userWalletTypeDefs = `#graphql
     availableBalance: Float
     pendingCredits: Float
     pendingDebits: Float
+    availableBalanceInUsd: Float
   }
 
   type SupportedWallet {

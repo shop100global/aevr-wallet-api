@@ -2,6 +2,7 @@ import ApiKeyResolvers from "./apiKey.resolvers.js";
 import googleAuthResolvers from "./google.auth.resolvers.js";
 import OTPResolvers from "./otp.resolvers.js";
 import passwordResetResolvers from "./passwordReset.resolvers.js";
+import ratesResolvers from "./rates.resolvers.js";
 import roleResolvers from "./role.resolvers.js";
 import { transferResolvers } from "./transfer.resolvers.js";
 import userResolvers from "./user.resolvers.js";
@@ -38,6 +39,7 @@ const resolvers = {
     ...ApiKeyResolvers.Query,
     ...userWalletResolvers.Query,
     ...transferResolvers.Query,
+    ...ratesResolvers.Query,
   },
   Mutation: {
     ...userResolvers.Mutation,

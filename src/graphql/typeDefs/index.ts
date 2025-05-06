@@ -2,6 +2,7 @@ import apiKeyTypeDefs from "./apiKey.js";
 import googleAuthTypeDefs from "./google.auth.js";
 import otpTypeDefs from "./otp.js";
 import passwordResetTypeDefs from "./passwordReset.js";
+import ratesTypeDefs from "./rates.js";
 import roleTypeDefs from "./role.js";
 import { transferTypeDefs } from "./transfer.js";
 import userTypeDefs from "./user.js";
@@ -46,6 +47,7 @@ const typeDefs = `
   ${passwordResetTypeDefs}
   ${userWalletTypeDefs}
   ${transferTypeDefs}
+  ${ratesTypeDefs}
 `;
 
 export default typeDefs;

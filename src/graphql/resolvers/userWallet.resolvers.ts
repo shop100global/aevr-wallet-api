@@ -5,6 +5,7 @@ import User from "../../models/user.model.js";
 import { WalletService } from "../../services/userWallet.services.js";
 import { Filters } from "../../utils/filters/index.js";
 import { PaginationInput } from "./index.js";
+import { RatesService } from "../../services/rates.services.js";
 
 interface WalletQueryArgs {
   filter?: Filters.UserWalletFilterOptions;
@@ -22,6 +23,8 @@ const walletService = new WalletService(
   process.env.PAY100_SECRET_KEY || ""
 );
 
+const ratesService = new RatesService();
+
 export const userWalletResolvers = {
   UserWallet: {
     /**
@@ -33,7 +36,15 @@ export const userWalletResolvers = {
           parent.sourceAccountId,
           parent.symbol
         );
-        return balance;
+        const balanceInUsd = await ratesService.convertCurrency({
+          fromSymbol: parent.symbol,
+          toSymbol: "USD",
+          amount: balance.availableBalance,
+        });
+        return {
+          ...balance,
+          availableBalanceInUsd: balanceInUsd.convertedAmount,
+        };
       } catch (error) {
         console.log("Query.balance error", error);
         return {
@@ -41,6 +52,7 @@ export const userWalletResolvers = {
           availableBalance: 0,
           pendingCredits: 0,
           pendingDebits: 0,
+          availableBalanceInUsd: 0,
           transactions: [],
         };
       }
