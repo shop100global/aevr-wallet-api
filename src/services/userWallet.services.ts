@@ -1,17 +1,23 @@
 // ./src/services/userWallet.services.ts
 
 // src/services/walletService.ts
-import { Pay100, CreateSubAccountData, Account } from "@100pay-hq/100pay.js";
+import {
+  Pay100,
+  CreateSubAccountData,
+  Account,
+  AccountDetails,
+} from "@100pay-hq/100pay.js";
 import { Types } from "mongoose";
 import {
   BalanceResult,
+  UserWallet as UserWalletType,
   UserWalletDocument,
 } from "../types/userWallet/index.js";
 import UserWallet from "../models/userWallet.model.js";
 import { Filters, UserWalletFilters } from "../utils/filters/index.js";
 import paginateCollection, { Pagination } from "../utils/paginate.js";
-import { logger } from "@untools/logger";
 import { WalletBalanceUtil } from "../utils/userWallet/balance.js";
+import { logger } from "@untools/logger";
 
 export class WalletService {
   private client: Pay100;
@@ -187,6 +193,99 @@ export class WalletService {
   }
 
   /**
+   * Retrieves user wallets associated with any of the given account addresses.
+   *
+   * @param {string[]} accountAddress - An array of account addresses to search for.
+   * @returns {Promise<UserWalletDocument[]>} A promise that resolves to an array of user wallet documents populated with user data.
+   */
+  async getUserWalletByAccountAddress(
+    accountAddress: string[]
+  ): Promise<UserWalletDocument[]> {
+    return UserWallet.find({
+      "account.address": { $in: accountAddress },
+    }).populate("user");
+  }
+
+  /**
+   * Gets merged data of user wallets and supported wallets
+   *
+   * @param filters - Filter options for wallets
+   * @param page - Page number for pagination
+   * @param limit - Number of records per page
+   * @returns Paginated wallet data
+   */
+  async getSupportedWallets({
+    filter = {},
+    pagination = { page: 1, limit: 100 },
+  }: {
+    filter?: Filters.UserWalletFilterOptions;
+    pagination?: Pagination;
+  }) {
+    let supportedWallets = await this.getSupportedCryptocurrencies();
+    supportedWallets = filter.symbols
+      ? supportedWallets.filter((wallet) =>
+          filter.symbols.includes(wallet.symbol)
+        )
+      : supportedWallets;
+    const constructedFilters = UserWalletFilters({ filters: filter });
+    const userWalletsData = await paginateCollection(
+      UserWallet,
+      {
+        page: pagination.page,
+        limit: pagination.limit,
+      },
+      {
+        filter: {
+          ...constructedFilters,
+          symbol: { $in: supportedWallets.map((wallet) => wallet.symbol) },
+        },
+        populate: "user",
+      }
+    );
+
+    const mergedWallets = supportedWallets.map((supportedWallet) => {
+      const userWalletsForSymbol = userWalletsData.data.filter(
+        (userWallet) => userWallet.symbol === supportedWallet?.symbol
+      );
+      const mergedWallet: UserWalletType & {
+        accounts: AccountDetails[];
+      } = {
+        ...supportedWallet,
+        accounts: userWalletsForSymbol.map((userWallet) => userWallet.account),
+        decimals:
+          userWalletsForSymbol[0]?.decimals ||
+          supportedWallet?.decimals?.toString(),
+        accountType: userWalletsForSymbol[0]?.accountType,
+        account:
+          userWalletsForSymbol[0]?.account ||
+          (supportedWallet?.account as AccountDetails),
+        contractAddress: userWalletsForSymbol[0]?.contractAddress,
+        appId: userWalletsForSymbol[0]?.appId,
+        network: userWalletsForSymbol[0]?.network,
+        ownerId: userWalletsForSymbol[0]?.ownerId,
+        parentWallet: userWalletsForSymbol[0]?.parentWallet,
+        sourceAccountId: userWalletsForSymbol[0]?.sourceAccountId,
+        status: userWalletsForSymbol[0]?.status,
+        user: userWalletsForSymbol[0]?.user,
+        userId: userWalletsForSymbol[0]?.userId,
+        // decimals: userWalletsForSymbol[0]?.decimals,
+        // logo: userWalletsForSymbol[0]?.logo,
+        // name: userWalletsForSymbol[0]?.name,
+        // symbol: userWalletsForSymbol[0]?.symbol,
+        walletType: userWalletsForSymbol[0]?.walletType,
+        createdAt: userWalletsForSymbol[0]?.createdAt,
+        updatedAt: userWalletsForSymbol[0]?.updatedAt,
+      };
+      return mergedWallet;
+    });
+
+    return {
+      data: mergedWallets,
+      meta: { ...userWalletsData.meta, total: mergedWallets.length },
+    };
+  }
+
+  /**
    * Verifies a transaction using the 100Pay API
    *
    * @param transactionId - Transaction ID to verify
@@ -246,7 +345,7 @@ export class WalletService {
         throw new Error(`Wallet with symbol ${symbol} not found`);
       }
 
-      return this.utils.calculateBalance(wallet.sourceAccountId, symbol);
+      return this.utils.calculateBalance([wallet.sourceAccountId], symbol);
     } catch (error) {
       console.error("Failed to get wallet balance:", error);
       throw error;
@@ -264,13 +363,70 @@ export class WalletService {
     symbol: string
   ): Promise<BalanceResult> {
     try {
-      return this.utils.calculateBalance(accountId, symbol, false);
+      return this.utils.calculateBalance([accountId], symbol, false);
     } catch (error) {
       console.error("Failed to get wallet balance:", error);
       throw error;
     }
   }
 
+  /**
+   * Gets the balances of multiple wallets by their account addresses.
+   *
+   * @param addresses - An array of blockchain account addresses to check.
+   * @param symbol - Cryptocurrency symbol (e.g., "BTC").
+   * @returns A promise that resolves to an array of wallet balance information.
+   */
+  async getWalletBalanceByAccountAddress(
+    addresses: string[],
+    symbol: string
+  ): Promise<BalanceResult> {
+    try {
+      const wallets = await this.getUserWalletByAccountAddress(addresses);
+
+      if (!wallets.length) {
+        throw new Error(
+          `No wallets found for addresses: ${addresses.join(", ")}`
+        );
+      }
+
+      const balances = await this.utils.calculateMultipleBalances(
+        wallets.map((wallet) => ({
+          accountId: wallet.sourceAccountId,
+          symbol: wallet.symbol,
+        }))
+      );
+
+      const aggregated = Object.values(balances).reduce<BalanceResult>(
+        (acc, curr) => {
+          acc.totalBalance += curr.totalBalance;
+          acc.availableBalance += curr.availableBalance;
+          acc.pendingCredits += curr.pendingCredits;
+          acc.pendingDebits += curr.pendingDebits;
+          acc.transactions.push(...(curr.transactions || []));
+          return acc;
+        },
+        {
+          totalBalance: 0,
+          availableBalance: 0,
+          pendingCredits: 0,
+          pendingDebits: 0,
+          transactions: [],
+        }
+      );
+
+      return aggregated;
+    } catch (error) {
+      console.error("Failed to get wallet balances:", error);
+      return {
+        totalBalance: 0,
+        availableBalance: 0,
+        pendingCredits: 0,
+        pendingDebits: 0,
+        transactions: [],
+      };
+    }
+  }
   /**
    * Gets the list of supported cryptocurrencies
    */

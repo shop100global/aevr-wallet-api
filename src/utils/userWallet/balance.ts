@@ -29,13 +29,13 @@ export class WalletBalanceUtil {
    * @returns Promise resolving to calculated balance information
    */
   async calculateBalance(
-    accountId: string,
+    accountId: string[],
     symbol: string,
     returnTransactions = false
   ): Promise<BalanceResult> {
     // Set up history parameters
     const historyParams: ITransferHistoryParams = {
-      accountIds: [accountId],
+      accountIds: accountId,
       symbol: symbol,
       // Start with a large limit to get as many transactions as possible
       // In production, you might want to implement pagination if there are many transactions
@@ -149,7 +149,7 @@ export class WalletBalanceUtil {
     await Promise.all(
       walletInfos.map(async ({ accountId, symbol }) => {
         try {
-          const balance = await this.calculateBalance(accountId, symbol);
+          const balance = await this.calculateBalance([accountId], symbol);
           balances[accountId] = balance;
         } catch (error) {
           console.error(

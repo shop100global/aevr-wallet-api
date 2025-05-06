@@ -18,6 +18,8 @@ const userWalletTypeDefs = `#graphql
     contractAddress: String
     contract: String
     logo: String
+    # for merged wallets
+    accounts: [Account]
   }
 
   type Account {
@@ -52,7 +54,7 @@ const userWalletTypeDefs = `#graphql
   # Filter inputs
   input UserWalletFilter {
     name: String
-    symbol: String
+    symbols: [String]
     status: String
     userId: String
     appId: String
@@ -74,9 +76,15 @@ const userWalletTypeDefs = `#graphql
     meta: Meta
   }
 
+  type SupportedWalletsData {
+    data: [SupportedWallet]
+    meta: Meta
+  }
+
   type Query {
     getUserWallets(filter: UserWalletFilter, pagination: Pagination): UserWalletsData
     getUserWalletBySymbol(userId: ID, symbol: String): UserWallet
+    getSupportedWallets(filter: UserWalletFilter, pagination: Pagination): SupportedWalletsData
     getSupportedCryptocurrencies: [SupportedWallet]
   }
 

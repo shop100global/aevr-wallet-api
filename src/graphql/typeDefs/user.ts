@@ -51,9 +51,16 @@ const userTypeDefs = `#graphql
     accessToken: String!
   }
 
+  input UserFiltersInput {
+    search: String
+    role: ID
+    emailVerified: Boolean
+  }
+
+
 
   type Query {
-    users(pagination: Pagination): UserData
+    users(pagination: Pagination, filters: UserFiltersInput, sort: SortInput): UserData
     user(id: ID!): User
     me: User
   }
@@ -62,7 +69,7 @@ const userTypeDefs = `#graphql
     register(input: RegisterInput!): RegisterData
     login(input: LoginInput!): AuthData
     refreshToken(token: String!): RefreshPayload!
-    updateUser(input: UpdateUserInput!): User
+    updateUser(id: ID, input: UpdateUserInput!): User
     deleteUser(id: ID!): User
   }
 `;
