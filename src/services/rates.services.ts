@@ -213,12 +213,6 @@ export class RatesService {
     toSymbol: string;
     amount: number;
   }): Promise<SimpleConversionResult> {
-    logger.info("RatesService.convertCurrency", {
-      fromSymbol,
-      toSymbol,
-      amount,
-    });
-
     const rates = await this.getAllPrices();
 
     const fromRate = rates.find(

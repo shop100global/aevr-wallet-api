@@ -10,7 +10,7 @@ export namespace Filters {
     accountIds?: string[];
     userId?: string;
     name?: string;
-    symbols?: [string];
+    symbols?: string[];
     status?: string;
     accountType?: string;
     walletType?: string;

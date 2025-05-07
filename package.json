@@ -32,7 +32,7 @@
   "description": "API generated from @untools/starter",
   "type": "module",
   "dependencies": {
-    "@100pay-hq/100pay.js": "^1.3.2",
+    "@100pay-hq/100pay.js": "^1.3.3",
     "@apollo/server": "^4.12.0",
     "@untools/logger": "^0.0.6",
     "bcrypt": "^5.1.1",

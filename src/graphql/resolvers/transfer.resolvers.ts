@@ -13,7 +13,7 @@ interface TransferAssetsInput {
 
 interface TransferHistoryArgs {
   pagination: { page?: number; limit?: number };
-  symbol?: string;
+  symbols?: string[];
 }
 
 interface TransferFeeArgs {
@@ -34,6 +34,19 @@ const walletService = new WalletService(
 );
 
 export const transferResolvers = {
+  TransferHistoryItem: {
+    wallet: async (parent, args, context, info) => {
+      try {
+        const wallet = await walletService.getUserWalletByAccountId(
+          parent.accountId
+        );
+        return wallet;
+      } catch (error) {
+        console.log("Query.wallet error", error);
+        throw error;
+      }
+    },
+  },
   Query: {
     /**
      * Get transfer history for the authenticated user
@@ -49,12 +62,12 @@ export const transferResolvers = {
         if (!userId) throw new Error("User not found");
 
         const pagination = args.pagination || {};
-        const symbol = args.symbol || "";
+        const symbols = args.symbols || [];
 
         const history = await transferService.getTransferHistory(userId, {
           page: pagination?.page || 1,
           limit: pagination?.limit || 10,
-          symbol: symbol,
+          symbols,
         });
 
         return { data: history.data, meta: history.meta };

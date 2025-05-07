@@ -207,6 +207,19 @@ export class WalletService {
   }
 
   /**
+   * Gets a specific wallet by accountId for a user
+   * @param accountId - 100Pay account ID
+   * @returns {Promise<UserWalletDocument | null>} A promise that resolves to a user wallet document or null if not found.
+   */
+  async getUserWalletByAccountId(
+    accountId: string
+  ): Promise<UserWalletDocument | null> {
+    return UserWallet.findOne({
+      sourceAccountId: accountId,
+    }).populate("user");
+  }
+
+  /**
    * Gets merged data of user wallets and supported wallets
    *
    * @param filters - Filter options for wallets

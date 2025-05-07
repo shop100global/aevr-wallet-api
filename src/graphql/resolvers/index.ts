@@ -32,6 +32,9 @@ const resolvers = {
   SupportedWallet: {
     ...userWalletResolvers.SupportedWallet,
   },
+  TransferHistoryItem: {
+    ...transferResolvers.TransferHistoryItem,
+  },
   Query: {
     ...userResolvers.Query,
     ...roleResolvers.Query,

@@ -27,6 +27,14 @@ const walletService = new WalletService(
 
 const ratesService = new RatesService();
 
+const getAmountInUsd = async (value: number, symbol: string) => {
+  return await ratesService.convertCurrency({
+    fromSymbol: symbol,
+    toSymbol: "USD",
+    amount: value,
+  });
+};
+
 export const userWalletResolvers = {
   UserWallet: {
     /**
@@ -38,11 +46,15 @@ export const userWalletResolvers = {
           parent.sourceAccountId,
           parent.symbol
         );
-        const balanceInUsd = await ratesService.convertCurrency({
-          fromSymbol: parent.symbol,
-          toSymbol: "USD",
-          amount: balance.availableBalance,
-        });
+        // const balanceInUsd = await ratesService.convertCurrency({
+        //   fromSymbol: parent.symbol,
+        //   toSymbol: "USD",
+        //   amount: balance.availableBalance,
+        // });
+        const balanceInUsd = await getAmountInUsd(
+          balance.availableBalance,
+          parent.symbol
+        );
         return {
           ...balance,
           availableBalanceInUsd: balanceInUsd.convertedAmount,
@@ -84,7 +96,14 @@ export const userWalletResolvers = {
           accountAddresses,
           parent.symbol
         );
-        return balance;
+        const balanceInUsd = await getAmountInUsd(
+          balance.availableBalance,
+          parent.symbol
+        );
+        return {
+          ...balance,
+          availableBalanceInUsd: balanceInUsd.convertedAmount,
+        };
       } catch (error) {
         console.log("Query.balance error", error);
         return {
