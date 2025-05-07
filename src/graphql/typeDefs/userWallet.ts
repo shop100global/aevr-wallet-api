@@ -21,6 +21,7 @@ const userWalletTypeDefs = `#graphql
     logo: String
     # for merged wallets
     accounts: [Account]
+    wallets(pagination: Pagination, filters: UserWalletFilter): UserWalletsData
   }
 
   type Account {

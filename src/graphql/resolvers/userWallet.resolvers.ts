@@ -7,6 +7,7 @@ import { Filters } from "../../utils/filters/index.js";
 import { PaginationInput } from "./index.js";
 import { RatesService } from "../../services/rates.services.js";
 import { checkUserIsAdmin } from "../../utils/user.js";
+import { ErrorHandler } from "../../services/error.services.js";
 
 interface WalletQueryArgs {
   filter?: Filters.UserWalletFilterOptions;
@@ -93,6 +94,34 @@ export const userWalletResolvers = {
           pendingDebits: 0,
           transactions: [],
         };
+      }
+    },
+    /**
+     * Get wallets for users with filtering and pagination
+     */
+    wallets: async (parent, args, context, info) => {
+      try {
+        const userId = context?.user?.data?.id;
+        if (!userId) throw new Error("User not found");
+
+        const filter = { ...(args.filter || {}), symbols: [parent.symbol] };
+        const pagination = args.pagination || {};
+
+        const isAdmin = await checkUserIsAdmin(userId);
+
+        if (!isAdmin) {
+          filter.userId = userId;
+        }
+
+        const wallets = await walletService.getFilteredUserWallets({
+          filter: { ...filter },
+          pagination,
+        });
+
+        return wallets;
+      } catch (error) {
+        console.log("Query.wallets error", error);
+        throw ErrorHandler.handleError(error);
       }
     },
   },
