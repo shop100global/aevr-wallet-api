@@ -11,6 +11,7 @@ export namespace Filters {
     userId?: string;
     name?: string;
     symbols?: string[];
+    networks?: string[];
     status?: string;
     accountType?: string;
     walletType?: string;
@@ -74,6 +75,9 @@ export const UserWalletFilters = ({
     ...(filters.name && { name: { $regex: filters.name, $options: "i" } }),
     ...(filters.symbols && {
       symbol: { $in: filters.symbols },
+    }),
+    ...(filters.networks && {
+      network: { $in: filters.networks },
     }),
 
     // Exact match filters

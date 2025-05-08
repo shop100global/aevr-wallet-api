@@ -62,6 +62,23 @@ export class WalletService {
     metadata?: Record<string, unknown>;
   }): Promise<UserWalletDocument[]> {
     try {
+      // check if user has already created a wallet with the same symbols and networks
+      const existingWallets = await this.getFilteredUserWallets({
+        filter: {
+          userId: userId.toString(),
+          symbols,
+          networks,
+        },
+      });
+
+      if (existingWallets.data.length > 0) {
+        throw new Error(
+          `User already has wallets with the same symbols and networks: ${existingWallets.data.map(
+            (wallet) => wallet.symbol
+          )}, ${existingWallets.data.map((wallet) => wallet.network)}`
+        );
+      }
+
       // Prepare the subaccount creation payload
       const subaccountData: CreateSubAccountData = {
         symbols,
