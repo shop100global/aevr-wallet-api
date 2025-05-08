@@ -135,7 +135,7 @@ export class WalletService {
         key: account.account.key,
         network: account.account.network,
       },
-      contractAddress: account.contractAddress,
+      // contractAddress: account.contractAddress,
       logo: account.logo,
       userId: account.userId,
       appId: account.appId,
@@ -291,7 +291,7 @@ export class WalletService {
         account:
           userWalletsForSymbol[0]?.account ||
           (supportedWallet?.account as AccountDetails),
-        contractAddress: userWalletsForSymbol[0]?.contractAddress,
+        // contractAddress: userWalletsForSymbol[0]?.contractAddress,
         appId: userWalletsForSymbol[0]?.appId,
         network: userWalletsForSymbol[0]?.network,
         ownerId: userWalletsForSymbol[0]?.ownerId,

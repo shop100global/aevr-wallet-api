@@ -21,7 +21,7 @@ const userWalletTypeDefs = `#graphql
     balance: BalanceResult
     account: Account
     fee: Fee
-    contractAddress: String
+    # contractAddress: String
     contract: String
     logo: String
     # for merged wallets
@@ -45,7 +45,7 @@ const userWalletTypeDefs = `#graphql
     symbol: String
     decimals: String
     account: Account
-    contractAddress: String
+    # contractAddress: String
     logo: String
     userId: String
     appId: String
