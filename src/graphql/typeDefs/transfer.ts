@@ -22,6 +22,7 @@ export const transferTypeDefs = `#graphql
   input TransferFeeInput {
     symbol: String!
     amount: Float!
+    network: String
   }
 
   # Meta information for transfer history

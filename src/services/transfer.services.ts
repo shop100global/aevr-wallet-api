@@ -216,18 +216,26 @@ export class TransferService {
    * @param userId - MongoDB ObjectId of the user
    * @param symbol - Cryptocurrency symbol
    * @param amount - Transfer amount
+   * @param network - Network name
    * @returns Fee calculation result
    */
-  async calculateTransferFee(
-    userId: string | Types.ObjectId,
-    symbol: string,
-    amount: number
-  ) {
+  async calculateTransferFee({
+    userId,
+    symbol,
+    network,
+    amount,
+  }: {
+    userId: string | Types.ObjectId;
+    symbol: string;
+    network: string;
+    amount: number;
+  }) {
     try {
       // Get user wallet for the symbol
       const userWallet = await this.walletService.getUserWalletBySymbol(
         userId,
-        symbol
+        symbol,
+        network
       );
 
       if (!userWallet) {
