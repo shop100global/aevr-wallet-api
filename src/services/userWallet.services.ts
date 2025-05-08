@@ -184,11 +184,13 @@ export class WalletService {
    */
   async getUserWalletBySymbol(
     userId: string | Types.ObjectId,
-    symbol: string
+    symbol: string,
+    network?: string
   ): Promise<UserWalletDocument | null> {
     return UserWallet.findOne({
       user: new Types.ObjectId(userId),
       symbol: symbol.toUpperCase(),
+      network: network,
     }).populate("user");
   }
 

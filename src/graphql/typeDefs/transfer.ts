@@ -7,6 +7,7 @@ export const transferTypeDefs = `#graphql
     toAddress: String
     amount: Float!
     symbol: String!
+    network: String
     description: String
   }
 

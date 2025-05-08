@@ -52,12 +52,14 @@ export class TransferService {
     toAddress,
     amount,
     symbol,
+    network,
     description = "Asset transfer",
   }: {
     fromUserId: string | Types.ObjectId;
     toUserId?: string | Types.ObjectId;
     toAddress?: string;
     amount: number;
+    network?: string;
     symbol: string;
     description?: string;
   }) {
@@ -66,6 +68,7 @@ export class TransferService {
       toUserId,
       toAddress,
       amount,
+      network,
       symbol,
       description,
     });
@@ -74,7 +77,8 @@ export class TransferService {
       // Get sender wallet
       const fromWallet = await this.walletService.getUserWalletBySymbol(
         fromUserId,
-        symbol
+        symbol,
+        network
       );
 
       if (!fromWallet) {

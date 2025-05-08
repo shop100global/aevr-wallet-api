@@ -6,6 +6,7 @@ import { WalletService } from "../../services/userWallet.services.js";
 interface TransferAssetsInput {
   toAddress?: string;
   toUserId?: string;
+  network?: string;
   amount: number;
   symbol: string;
   description?: string;
@@ -114,7 +115,8 @@ export const transferResolvers = {
         const userId = context?.user?.data?.id;
         if (!userId) throw new Error("User not found");
 
-        const { toAddress, toUserId, amount, symbol, description } = input;
+        const { toAddress, toUserId, amount, network, symbol, description } =
+          input;
 
         const transferResult = await transferService.transferAssets({
           fromUserId: userId,
