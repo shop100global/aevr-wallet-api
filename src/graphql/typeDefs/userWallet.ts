@@ -7,20 +7,26 @@ const userWalletTypeDefs = `#graphql
     availableBalanceInUsd: Float
   }
 
+  type Fee {
+    transfer: Float
+    convert: Float
+  }
+
   type SupportedWallet {
     name: String
     symbol: String
     decimals: String
     networks: [String]
     hotwallet: String
-    balance: JSON
-    account: JSON
-    fee: JSON
+    balance: BalanceResult
+    account: Account
+    fee: Fee
     contractAddress: String
     contract: String
     logo: String
     # for merged wallets
     accounts: [Account]
+    wallets(pagination: Pagination, filters: UserWalletFilter): UserWalletsData
   }
 
   type Account {

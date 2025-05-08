@@ -62,6 +62,23 @@ export class WalletService {
     metadata?: Record<string, unknown>;
   }): Promise<UserWalletDocument[]> {
     try {
+      // check if user has already created a wallet with the same symbols and networks
+      const existingWallets = await this.getFilteredUserWallets({
+        filter: {
+          userId: userId.toString(),
+          symbols,
+          networks,
+        },
+      });
+
+      if (existingWallets.data.length > 0) {
+        throw new Error(
+          `User already has wallets with the same symbols and networks: ${existingWallets.data.map(
+            (wallet) => wallet.symbol
+          )}, ${existingWallets.data.map((wallet) => wallet.network)}`
+        );
+      }
+
       // Prepare the subaccount creation payload
       const subaccountData: CreateSubAccountData = {
         symbols,
@@ -184,11 +201,13 @@ export class WalletService {
    */
   async getUserWalletBySymbol(
     userId: string | Types.ObjectId,
-    symbol: string
+    symbol: string,
+    network?: string
   ): Promise<UserWalletDocument | null> {
     return UserWallet.findOne({
       user: new Types.ObjectId(userId),
       symbol: symbol.toUpperCase(),
+      network: network,
     }).populate("user");
   }
 
@@ -203,6 +222,19 @@ export class WalletService {
   ): Promise<UserWalletDocument[]> {
     return UserWallet.find({
       "account.address": { $in: accountAddress },
+    }).populate("user");
+  }
+
+  /**
+   * Gets a specific wallet by accountId for a user
+   * @param accountId - 100Pay account ID
+   * @returns {Promise<UserWalletDocument | null>} A promise that resolves to a user wallet document or null if not found.
+   */
+  async getUserWalletByAccountId(
+    accountId: string
+  ): Promise<UserWalletDocument | null> {
+    return UserWallet.findOne({
+      sourceAccountId: accountId,
     }).populate("user");
   }
 

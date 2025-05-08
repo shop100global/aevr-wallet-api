@@ -9,6 +9,7 @@ const userTypeDefs = `#graphql
     phone: String
     phoneVerified: Boolean
     roles: [Role]
+    wallets(pagination: Pagination, filters: UserWalletFilter): UserWalletsData
   }
 
   type UserData {

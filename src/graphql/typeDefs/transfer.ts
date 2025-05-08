@@ -7,6 +7,7 @@ export const transferTypeDefs = `#graphql
     toAddress: String
     amount: Float!
     symbol: String!
+    network: String
     description: String
   }
 
@@ -58,6 +59,7 @@ export const transferTypeDefs = `#graphql
   type TransferHistoryItem {
     id: ID
     userId: String
+    accountId: String
     amount: String
     symbol: String
     fee: String
@@ -65,7 +67,9 @@ export const transferTypeDefs = `#graphql
     status: String
     from: String
     to: String
+    type: String
     recipient: TransferRecipient
+    wallet: UserWallet
     createdAt: String
     updatedAt: String
   }
@@ -134,7 +138,7 @@ export const transferTypeDefs = `#graphql
 
   extend type Query {
     # Get transfer history for the authenticated user
-    getTransferHistory(pagination: Pagination, symbol: String): TransferHistoryData
+    getTransferHistory(pagination: Pagination, symbols: [String]): TransferHistoryData
 
     # Calculate transfer fee for a transaction
     calculateTransferFee(input: TransferFeeInput!): FeeCalculationResponse

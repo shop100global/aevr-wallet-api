@@ -6,6 +6,8 @@ import { WalletService } from "../../services/userWallet.services.js";
 import { Filters } from "../../utils/filters/index.js";
 import { PaginationInput } from "./index.js";
 import { RatesService } from "../../services/rates.services.js";
+import { checkUserIsAdmin } from "../../utils/user.js";
+import { ErrorHandler } from "../../services/error.services.js";
 
 interface WalletQueryArgs {
   filter?: Filters.UserWalletFilterOptions;
@@ -25,6 +27,14 @@ const walletService = new WalletService(
 
 const ratesService = new RatesService();
 
+const getAmountInUsd = async (value: number, symbol: string) => {
+  return await ratesService.convertCurrency({
+    fromSymbol: symbol,
+    toSymbol: "USD",
+    amount: value,
+  });
+};
+
 export const userWalletResolvers = {
   UserWallet: {
     /**
@@ -36,11 +46,15 @@ export const userWalletResolvers = {
           parent.sourceAccountId,
           parent.symbol
         );
-        const balanceInUsd = await ratesService.convertCurrency({
-          fromSymbol: parent.symbol,
-          toSymbol: "USD",
-          amount: balance.availableBalance,
-        });
+        // const balanceInUsd = await ratesService.convertCurrency({
+        //   fromSymbol: parent.symbol,
+        //   toSymbol: "USD",
+        //   amount: balance.availableBalance,
+        // });
+        const balanceInUsd = await getAmountInUsd(
+          balance.availableBalance,
+          parent.symbol
+        );
         return {
           ...balance,
           availableBalanceInUsd: balanceInUsd.convertedAmount,
@@ -82,7 +96,14 @@ export const userWalletResolvers = {
           accountAddresses,
           parent.symbol
         );
-        return balance;
+        const balanceInUsd = await getAmountInUsd(
+          balance.availableBalance,
+          parent.symbol
+        );
+        return {
+          ...balance,
+          availableBalanceInUsd: balanceInUsd.convertedAmount,
+        };
       } catch (error) {
         console.log("Query.balance error", error);
         return {
@@ -92,6 +113,34 @@ export const userWalletResolvers = {
           pendingDebits: 0,
           transactions: [],
         };
+      }
+    },
+    /**
+     * Get wallets for users with filtering and pagination
+     */
+    wallets: async (parent, args, context, info) => {
+      try {
+        const userId = context?.user?.data?.id;
+        if (!userId) throw new Error("User not found");
+
+        const filter = { ...(args.filter || {}), symbols: [parent.symbol] };
+        const pagination = args.pagination || {};
+
+        const isAdmin = await checkUserIsAdmin(userId);
+
+        if (!isAdmin) {
+          filter.userId = userId;
+        }
+
+        const wallets = await walletService.getFilteredUserWallets({
+          filter: { ...filter },
+          pagination,
+        });
+
+        return wallets;
+      } catch (error) {
+        console.log("Query.wallets error", error);
+        throw ErrorHandler.handleError(error);
       }
     },
   },
@@ -107,8 +156,10 @@ export const userWalletResolvers = {
         const filter = args.filter || {};
         const pagination = args.pagination || {};
 
+        const userIsAdmin = await checkUserIsAdmin(userId);
+
         const wallets = await walletService.getFilteredUserWallets({
-          filter: { ...filter, userId },
+          filter: { ...filter, userId: userIsAdmin ? filter.userId : userId },
           pagination,
         });
 

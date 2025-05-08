@@ -52,12 +52,14 @@ export class TransferService {
     toAddress,
     amount,
     symbol,
+    network,
     description = "Asset transfer",
   }: {
     fromUserId: string | Types.ObjectId;
     toUserId?: string | Types.ObjectId;
     toAddress?: string;
     amount: number;
+    network?: string;
     symbol: string;
     description?: string;
   }) {
@@ -66,6 +68,7 @@ export class TransferService {
       toUserId,
       toAddress,
       amount,
+      network,
       symbol,
       description,
     });
@@ -74,7 +77,8 @@ export class TransferService {
       // Get sender wallet
       const fromWallet = await this.walletService.getUserWalletBySymbol(
         fromUserId,
-        symbol
+        symbol,
+        network
       );
 
       if (!fromWallet) {
@@ -161,12 +165,10 @@ export class TransferService {
       const userWallets = await this.walletService.getFilteredUserWallets({
         filter: {
           userId: userId.toString(),
-          ...(params.symbol && { symbol: params.symbol }),
+          ...(params.symbols && { symbols: params.symbols }),
           ...(params.accountIds && { sourceAccountIds: params.accountIds }),
         },
       });
-
-      console.info("userWallets", userWallets);
 
       // Extract wallet addresses
       const walletAddresses = userWallets.data.map(
@@ -187,13 +189,19 @@ export class TransferService {
         ...params,
       };
 
-      logger.info("historyParams", historyParams);
-
       // Get transfer history from 100Pay API
       const historyResult =
         await this.client.transfer.getHistory(historyParams);
 
-      return historyResult;
+      logger.debug("Transfer history result", historyResult);
+
+      return {
+        ...historyResult,
+        data: historyResult.data.map((trx) => ({
+          ...trx,
+          id: trx._id.toString(),
+        })),
+      };
     } catch (error) {
       console.error("Failed to get transfer history:", error);
       throw new Error(
