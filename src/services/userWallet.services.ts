@@ -1,6 +1,5 @@
 // ./src/services/userWallet.services.ts
 
-// src/services/walletService.ts
 import {
   Pay100,
   CreateSubAccountData,
