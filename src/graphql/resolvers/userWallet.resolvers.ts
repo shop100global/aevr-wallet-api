@@ -196,6 +196,14 @@ export const userWalletResolvers = {
         const filter = args.filter;
         const pagination = args.pagination;
 
+        const userId = context?.user?.data?.id;
+
+        const userIsAdmin = await checkUserIsAdmin(userId);
+
+        if (!userIsAdmin) {
+          filter.userId = userId;
+        }
+
         const wallets = await walletService.getSupportedWallets({
           filter,
           pagination,
