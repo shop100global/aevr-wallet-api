@@ -89,9 +89,9 @@ const userWalletTypeDefs = `#graphql
   }
 
   type Query {
-    getUserWallets(filter: UserWalletFilter, pagination: Pagination): UserWalletsData
+    getUserWallets(filters: UserWalletFilter, pagination: Pagination): UserWalletsData
     getUserWalletBySymbol(userId: ID, symbol: String): UserWallet
-    getSupportedWallets(filter: UserWalletFilter, pagination: Pagination): SupportedWalletsData
+    getSupportedWallets(filters: UserWalletFilter, pagination: Pagination): SupportedWalletsData
     getSupportedCryptocurrencies: [SupportedWallet]
   }
 

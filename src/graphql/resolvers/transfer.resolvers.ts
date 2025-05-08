@@ -6,7 +6,7 @@ import { WalletService } from "../../services/userWallet.services.js";
 interface TransferAssetsInput {
   toAddress?: string;
   toUserId?: string;
-  network?: string;
+  network: string;
   amount: number;
   symbol: string;
   description?: string;
@@ -126,6 +126,7 @@ export const transferResolvers = {
           toUserId,
           amount,
           symbol,
+          network,
           description,
         });
 
