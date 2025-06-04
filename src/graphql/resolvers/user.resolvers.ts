@@ -56,7 +56,7 @@ const userResolvers = {
         const pagination = args.pagination || {};
 
         const wallets = await walletService.getFilteredUserWallets({
-          filter: { ...filter, userId: parent.id },
+          filters: { ...filter, userId: parent.id },
           pagination,
         });
 

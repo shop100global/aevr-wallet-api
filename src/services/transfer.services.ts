@@ -59,20 +59,10 @@ export class TransferService {
     toUserId?: string | Types.ObjectId;
     toAddress?: string;
     amount: number;
-    network?: string;
+    network: string;
     symbol: string;
     description?: string;
   }) {
-    logger.info("TransferService.transferAssets", {
-      fromUserId,
-      toUserId,
-      toAddress,
-      amount,
-      network,
-      symbol,
-      description,
-    });
-
     try {
       // Get sender wallet
       const fromWallet = await this.walletService.getUserWalletBySymbol(
@@ -82,7 +72,9 @@ export class TransferService {
       );
 
       if (!fromWallet) {
-        throw new Error(`Sender doesn't have a ${symbol} wallet`);
+        throw new Error(
+          `Sender doesn't have a ${symbol} wallet with network ${network}`
+        );
       }
 
       let walletAddress: string;
@@ -133,6 +125,8 @@ export class TransferService {
       const transferResult =
         await this.client.transfer.executeTransfer(transferData);
 
+      logger.info("transferResult", transferResult);
+
       return {
         ...transferResult,
         fromWallet,
@@ -163,7 +157,7 @@ export class TransferService {
     try {
       // Get all wallets for the user
       const userWallets = await this.walletService.getFilteredUserWallets({
-        filter: {
+        filters: {
           userId: userId.toString(),
           ...(params.symbols && { symbols: params.symbols }),
           ...(params.accountIds && { sourceAccountIds: params.accountIds }),
@@ -216,18 +210,26 @@ export class TransferService {
    * @param userId - MongoDB ObjectId of the user
    * @param symbol - Cryptocurrency symbol
    * @param amount - Transfer amount
+   * @param network - Network name
    * @returns Fee calculation result
    */
-  async calculateTransferFee(
-    userId: string | Types.ObjectId,
-    symbol: string,
-    amount: number
-  ) {
+  async calculateTransferFee({
+    userId,
+    symbol,
+    network,
+    amount,
+  }: {
+    userId: string | Types.ObjectId;
+    symbol: string;
+    network: string;
+    amount: number;
+  }) {
     try {
       // Get user wallet for the symbol
       const userWallet = await this.walletService.getUserWalletBySymbol(
         userId,
-        symbol
+        symbol,
+        network
       );
 
       if (!userWallet) {

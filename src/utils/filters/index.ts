@@ -24,7 +24,7 @@ export namespace Filters {
     createdBefore?: Date | string;
     updatedAfter?: Date | string;
     updatedBefore?: Date | string;
-    contractAddress?: string;
+    // contractAddress?: string;
   }
 }
 
@@ -91,9 +91,9 @@ export const UserWalletFilters = ({
     ...(filters.sourceAccountId && {
       sourceAccountId: filters.sourceAccountId,
     }),
-    ...(filters.contractAddress && {
-      contractAddress: filters.contractAddress,
-    }),
+    // ...(filters.contractAddress && {
+    //   contractAddress: filters.contractAddress,
+    // }),
 
     // Date filters
     ...(filters.createdAfter && {

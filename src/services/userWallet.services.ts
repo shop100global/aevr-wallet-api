@@ -1,6 +1,5 @@
 // ./src/services/userWallet.services.ts
 
-// src/services/walletService.ts
 import {
   Pay100,
   CreateSubAccountData,
@@ -64,7 +63,7 @@ export class WalletService {
     try {
       // check if user has already created a wallet with the same symbols and networks
       const existingWallets = await this.getFilteredUserWallets({
-        filter: {
+        filters: {
           userId: userId.toString(),
           symbols,
           networks,
@@ -135,7 +134,7 @@ export class WalletService {
         key: account.account.key,
         network: account.account.network,
       },
-      contractAddress: account.contractAddress,
+      // contractAddress: account.contractAddress,
       logo: account.logo,
       userId: account.userId,
       appId: account.appId,
@@ -172,13 +171,13 @@ export class WalletService {
    * @returns Paginated wallet data
    */
   async getFilteredUserWallets({
-    filter = {},
+    filters = {},
     pagination = { page: 1, limit: 10 },
   }: {
-    filter?: Filters.UserWalletFilterOptions;
+    filters?: Filters.UserWalletFilterOptions;
     pagination?: Pagination;
   }) {
-    const constructedFilters = UserWalletFilters({ filters: filter });
+    const constructedFilters = UserWalletFilters({ filters: filters });
     return paginateCollection(
       UserWallet,
       {
@@ -205,7 +204,7 @@ export class WalletService {
     network?: string
   ): Promise<UserWalletDocument | null> {
     return UserWallet.findOne({
-      user: new Types.ObjectId(userId),
+      user: userId,
       symbol: symbol.toUpperCase(),
       network: network,
     }).populate("user");
@@ -247,19 +246,19 @@ export class WalletService {
    * @returns Paginated wallet data
    */
   async getSupportedWallets({
-    filter = {},
+    filters = {},
     pagination = { page: 1, limit: 100 },
   }: {
-    filter?: Filters.UserWalletFilterOptions;
+    filters?: Filters.UserWalletFilterOptions;
     pagination?: Pagination;
   }) {
     let supportedWallets = await this.getSupportedCryptocurrencies();
-    supportedWallets = filter.symbols
+    supportedWallets = filters.symbols
       ? supportedWallets.filter((wallet) =>
-          filter.symbols.includes(wallet.symbol)
+          filters.symbols.includes(wallet.symbol)
         )
       : supportedWallets;
-    const constructedFilters = UserWalletFilters({ filters: filter });
+    const constructedFilters = UserWalletFilters({ filters: filters });
     const userWalletsData = await paginateCollection(
       UserWallet,
       {
@@ -291,7 +290,7 @@ export class WalletService {
         account:
           userWalletsForSymbol[0]?.account ||
           (supportedWallet?.account as AccountDetails),
-        contractAddress: userWalletsForSymbol[0]?.contractAddress,
+        // contractAddress: userWalletsForSymbol[0]?.contractAddress,
         appId: userWalletsForSymbol[0]?.appId,
         network: userWalletsForSymbol[0]?.network,
         ownerId: userWalletsForSymbol[0]?.ownerId,

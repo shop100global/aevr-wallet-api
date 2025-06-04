@@ -10,7 +10,7 @@ export interface UserWallet {
   symbol: string;
   decimals: string;
   account: AccountDetails;
-  contractAddress: string;
+  // contractAddress: string;
   logo: string;
   userId: string;
   appId: string;

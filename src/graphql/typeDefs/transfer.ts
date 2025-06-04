@@ -7,7 +7,7 @@ export const transferTypeDefs = `#graphql
     toAddress: String
     amount: Float!
     symbol: String!
-    network: String
+    network: String!
     description: String
   }
 
@@ -22,6 +22,7 @@ export const transferTypeDefs = `#graphql
   input TransferFeeInput {
     symbol: String!
     amount: Float!
+    network: String!
   }
 
   # Meta information for transfer history

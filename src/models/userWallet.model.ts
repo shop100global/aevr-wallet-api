@@ -24,7 +24,7 @@ const userWalletSchema = new Schema<UserWalletDocument, UserWalletModel>(
       key: Object,
       network: String,
     },
-    contractAddress: String,
+    // contractAddress: String,
     logo: String,
     userId: String,
     appId: String,

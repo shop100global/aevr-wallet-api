@@ -133,7 +133,7 @@ export const userWalletResolvers = {
         }
 
         const wallets = await walletService.getFilteredUserWallets({
-          filter: { ...filter },
+          filters: { ...filter },
           pagination,
         });
 
@@ -153,13 +153,16 @@ export const userWalletResolvers = {
         const userId = context?.user?.data?.id;
         if (!userId) throw new Error("User not found");
 
-        const filter = args.filter || {};
+        const filters = args.filters || {};
         const pagination = args.pagination || {};
 
         const userIsAdmin = await checkUserIsAdmin(userId);
 
         const wallets = await walletService.getFilteredUserWallets({
-          filter: { ...filter, userId: userIsAdmin ? filter.userId : userId },
+          filters: {
+            ...filters,
+            userId: userIsAdmin ? filters.userId : userId,
+          },
           pagination,
         });
 
@@ -193,11 +196,21 @@ export const userWalletResolvers = {
      */
     getSupportedWallets: async (parent, args, context, info) => {
       try {
-        const filter = args.filter;
-        const pagination = args.pagination;
+        const filters = args.filters || {};
+        const pagination = args.pagination || {};
+
+        logger.log({ context });
+
+        const userId = context?.user?.data?.id;
+
+        const userIsAdmin = await checkUserIsAdmin(userId);
+
+        if (!userIsAdmin) {
+          filters.userId = userId;
+        }
 
         const wallets = await walletService.getSupportedWallets({
-          filter,
+          filters,
           pagination,
         });
 

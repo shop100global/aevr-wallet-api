@@ -6,7 +6,7 @@ import { WalletService } from "../../services/userWallet.services.js";
 interface TransferAssetsInput {
   toAddress?: string;
   toUserId?: string;
-  network?: string;
+  network: string;
   amount: number;
   symbol: string;
   description?: string;
@@ -20,6 +20,7 @@ interface TransferHistoryArgs {
 interface TransferFeeArgs {
   symbol: string;
   amount: number;
+  network: string;
 }
 
 // Initialize the transfer service with your 100Pay API keys
@@ -88,11 +89,12 @@ export const transferResolvers = {
 
         const input: TransferFeeArgs = args?.input || {};
 
-        const feeResult = await transferService.calculateTransferFee(
+        const feeResult = await transferService.calculateTransferFee({
+          amount: input.amount,
+          symbol: input.symbol,
+          network: input.network,
           userId,
-          input.symbol,
-          input.amount
-        );
+        });
 
         return feeResult;
       } catch (error) {
@@ -124,6 +126,7 @@ export const transferResolvers = {
           toUserId,
           amount,
           symbol,
+          network,
           description,
         });
 
