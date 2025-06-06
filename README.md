@@ -1,6 +1,17 @@
 # wallet-api
 
-GraphQL API built with TypeScript, Express, and MongoDB.
+GraphQL API built with TypeScript, Express, and MongoDB for crypto wallet management using 100Pay's subwallet API.
+
+## Overview
+
+This project demonstrates how to build a comprehensive crypto wallet system using the **100Pay SDK** (`@100pay-hq/100pay.js`). The API provides complete wallet management functionality including:
+
+- Multi-currency wallet creation and management
+- Asset transfers between wallets and external addresses
+- Real-time balance calculations
+- Transaction history tracking
+- Transfer fee calculations
+- Transaction verification
 
 ## Getting Started
 
@@ -11,7 +22,7 @@ GraphQL API built with TypeScript, Express, and MongoDB.
 npm install
 ```
 
-3. Configure your environment variables in the `.env` file
+3. Configure your environment variables in the `.env` file (see Environment Variables section)
 
 4. Start the development server:
 
@@ -21,17 +32,24 @@ npm run dev
 
 ## Environment Variables
 
-The following environment variables have been pre-configured:
+The following environment variables need to be configured:
+
+### Core Configuration
 
 - `PORT`: 9872 (Server port)
 - `APP_NAME`: wallet-api
 - `APP_URL`: <https://wallet-api.projects.aevr.space>
 - `MONGO_URI`: Local MongoDB connection
-- `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`: Generated for Web Push notifications
+
+### 100Pay Configuration
+
+Add your 100Pay API credentials:
+
+- `PAY100_PUBLIC_KEY`: Your 100Pay public key
+- `PAY100_SECRET_KEY`: Your 100Pay secret key
+- `PAY100_BASE_URL`: 100Pay API base URL (optional)
 
 ### Email Configuration
-
-Update the following variables with your email service credentials:
 
 - `MAIL_HOST`
 - `MAIL_PORT`
@@ -43,22 +61,106 @@ Update the following variables with your email service credentials:
 
 ### Google OAuth
 
-Update the following variables with your Google OAuth credentials:
-
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_OAUTH_REDIRECT_URI`
 
+### Web Push Notifications
+
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+
+## 100Pay SDK Integration
+
+This project leverages the **100Pay SDK** (`@100pay-hq/100pay.js`) to provide comprehensive crypto wallet functionality.
+
+### Architecture Overview
+
+The 100Pay SDK is integrated across multiple layers:
+
+- **Service Layer**: `WalletService` and `TransferService` classes handle all 100Pay operations
+- **Utility Layer**: `WalletBalanceUtil` for balance calculations and transaction processing
+- **GraphQL Layer**: Resolvers expose wallet operations via GraphQL API
+- **Database Layer**: Local storage of wallet metadata and user associations
+
+### Key Features
+
+#### 1. Multi-Currency Wallet Creation
+
+Automatically creates subwallets for users. The supported currencies and networks are dynamically retrieved from 100Pay:
+
+```typescript
+// Get supported wallets first
+const supportedWallets = await walletService.getSupportedWallets();
+
+// Create wallets with supported symbols and networks
+const wallets = await walletService.createUserWallets({
+  userId: user.id,
+  email: user.email,
+  name: `${user.firstName} ${user.lastName}`,
+  symbols: supportedWallets.map(w => w.symbol), // Dynamic symbols
+  networks: supportedWallets.flatMap(w => w.networks.map(n => n.name)) // Dynamic networks
+});
+```
+
+#### 2. Real-Time Balance Calculation
+
+Balances are calculated in real-time by processing transaction history:
+
+```typescript
+const balance = await walletService.calculateBalance(
+  accountIds, 
+  symbol, 
+  includeTransactions
+);
+```
+
+#### 3. Asset Transfers
+
+Support for both internal (user-to-user) and external (to address) transfers:
+
+```typescript
+const transfer = await transferService.transferAssets({
+  fromUserId,
+  toUserId, // or toAddress for external transfers
+  amount,
+  symbol,
+  network,
+  description
+});
+```
+
+#### 4. Transaction History & Verification
+
+Complete transaction tracking with verification capabilities:
+
+```typescript
+const history = await transferService.getTransferHistory(userId, {
+  page: 1,
+  limit: 10,
+  symbol: "ETH"
+});
+
+const verified = await walletService.verifyTransaction(transactionId);
+```
+
+### SDK Implementation Details
+
+| Operation | Service Class | SDK Method | Purpose |
+|-----------|---------------|------------|---------|
+| Wallet Creation | `WalletService` | `client.subaccounts.create` | Create subwallets for users |
+| Balance Calculation | `WalletBalanceUtil` | `client.transfer.getHistory` | Calculate real-time balances |
+| Asset Transfer | `TransferService` | `client.transfer.executeTransfer` | Execute transfers |
+| Transfer History | `TransferService` | `client.transfer.getHistory` | Fetch transaction history |
+| Fee Calculation | `TransferService` | `client.transfer.calculateFee` | Calculate transfer fees |
+| Transaction Verification | `WalletService` | `client.verify` | Verify transactions |
+| Supported Wallets | `WalletService` | `client.wallet.getSupportedWallets` | Get available cryptocurrencies and networks |
+
 ## Authentication
 
-This API uses **JWT-based authentication**. Most endpoints require an `Authorization` header with a valid access token. Additionally, to interact with the API, you must include a valid API key in the `x-api-key` header.
+This API uses **JWT-based authentication** with API key requirements for additional security.
 
 ### Headers Required for Requests
-
-- **Authorization**: Include a valid JWT access token.
-- **x-api-key**: Include a valid API key.
-
-Example:
 
 ```http
 Authorization: Bearer <access_token>
@@ -69,15 +171,13 @@ x-api-key: <api_key>
 
 The GraphQL API is accessible at:
 
-```
+```bash
 https://wallet-api.projects.aevr.space/graphql
 ```
 
 ### Authentication Flow
 
 #### 1. Register a New User
-
-Register a new user account with the following mutation:
 
 ```graphql
 mutation Register($input: RegisterInput!) {
@@ -96,71 +196,13 @@ mutation Register($input: RegisterInput!) {
 }
 ```
 
-Input:
-
-```json
-{
-  "input": {
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john.doe@example.com",
-    "password": "securepassword"
-  }
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "register": {
-      "user": {
-        "id": "12345",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "john.doe@example.com",
-        "emailVerified": false,
-        "roles": [
-          {
-            "name": "user"
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
 #### 2. Verify Email with OTP
-
-Before logging in, users must verify their email address using a one-time password (OTP). Use the following mutations to request and verify an OTP:
 
 **Request OTP**:
 
 ```graphql
 mutation SendOTP($input: SendOTPInput!) {
   sendOTP(input: $input)
-}
-```
-
-Input:
-
-```json
-{
-  "input": {
-    "email": "john.doe@example.com"
-  }
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "sendOTP": "OTP sent to john.doe@example.com successfully"
-  }
 }
 ```
 
@@ -172,30 +214,7 @@ mutation VerifyOTP($input: VerifyOTPInput!) {
 }
 ```
 
-Input:
-
-```json
-{
-  "input": {
-    "email": "john.doe@example.com",
-    "otp": "123456"
-  }
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "verifyOTP": true
-  }
-}
-```
-
 #### 3. Login
-
-Once the email is verified, users can log in and retrieve access and refresh tokens:
 
 ```graphql
 mutation Login($input: LoginInput!) {
@@ -207,335 +226,232 @@ mutation Login($input: LoginInput!) {
       firstName
       lastName
       email
-      roles {
-        name
-      }
     }
   }
 }
 ```
 
-Input:
+## Wallet Operations
+
+### Create User Wallets
+
+After user registration, wallets are automatically created:
+
+```graphql
+mutation CreateUserWallets($input: CreateUserWalletsInput!) {
+  createUserWallets(input: $input) {
+    id
+    userId
+    symbol
+    network
+    balance {
+      total
+      available
+      pending
+    }
+    account {
+      id
+      address
+    }
+  }
+}
+```
+
+### Get User Wallets
+
+Retrieve all wallets for a user:
+
+```graphql
+query GetUserWallets($userId: ID!, $symbol: String) {
+  getUserWallets(userId: $userId, symbol: $symbol) {
+    id
+    symbol
+    network
+    balance {
+      total
+      available
+      pending
+    }
+    account {
+      address
+    }
+  }
+}
+```
+
+### Transfer Assets
+
+Transfer cryptocurrency between users or to external addresses:
+
+```graphql
+mutation TransferAssets($input: TransferAssetsInput!) {
+  transferAssets(input: $input) {
+    id
+    amount
+    symbol
+    from
+    to
+    status
+    transactionHash
+    fee
+  }
+}
+```
+
+Example input:
 
 ```json
 {
   "input": {
-    "email": "john.doe@example.com",
-    "password": "securepassword"
+    "fromUserId": "user123",
+    "toUserId": "user456",
+    "amount": "0.1",
+    "symbol": "ETH",
+    "network": "BSC",
+    "description": "Payment for services"
   }
 }
 ```
 
-Response:
+### Get Transfer History
 
-```json
-{
-  "data": {
-    "login": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": "12345",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "john.doe@example.com",
-        "roles": [
-          {
-            "name": "user"
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-#### 4. Using Authentication Tokens
-
-Include the access token in the `Authorization` header for protected requests:
-
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-#### 5. Refresh Token
-
-When an access token expires, refresh it using:
+Fetch transaction history with pagination:
 
 ```graphql
-mutation RefreshToken($token: String!) {
-  refreshToken(token: $token) {
-    accessToken
-  }
-}
-```
-
-Input:
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "refreshToken": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-  }
-}
-```
-
-#### 6. Get Current User
-
-Retrieve the currently authenticated user's details:
-
-```graphql
-query Me {
-  me {
-    id
-    firstName
-    lastName
-    email
-    emailVerified
-    roles {
-      name
-    }
-  }
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "me": {
-      "id": "12345",
-      "firstName": "John",
-      "lastName": "Doe",
-      "email": "john.doe@example.com",
-      "emailVerified": true,
-      "roles": [
-        {
-          "name": "user"
-        }
-      ]
-    }
-  }
-}
-```
-
-### Password Reset
-
-#### 1. Request Password Reset
-
-Request a password reset email:
-
-```graphql
-mutation RequestPasswordReset($email: String!) {
-  requestPasswordReset(email: $email)
-}
-```
-
-Input:
-
-```json
-{
-  "email": "john.doe@example.com"
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "requestPasswordReset": true
-  }
-}
-```
-
-#### 2. Reset Password
-
-Reset the password using the token sent via email:
-
-```graphql
-mutation ResetPassword($token: String!, $password: String!) {
-  resetPassword(token: $token, password: $password)
-}
-```
-
-Input:
-
-```json
-{
-  "token": "reset-token-from-email",
-  "password": "newsecurepassword"
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "resetPassword": true
-  }
-}
-```
-
-### Google OAuth Authentication
-
-Authenticate a user via Google OAuth:
-
-```graphql
-mutation GoogleAuth($code: String!) {
-  googleAuth(code: $code) {
-    accessToken
-    refreshToken
-    user {
+query GetTransferHistory($userId: ID!, $params: TransferHistoryParams) {
+  getTransferHistory(userId: $userId, params: $params) {
+    transfers {
       id
-      firstName
-      lastName
-      email
-      roles {
-        name
-      }
+      amount
+      symbol
+      from
+      to
+      status
+      createdAt
+      transactionHash
+    }
+    pagination {
+      page
+      limit
+      total
+      hasNext
     }
   }
 }
 ```
 
-Input:
+### Calculate Transfer Fee
 
-```json
-{
-  "code": "google-oauth-code"
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "googleAuth": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": "12345",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "john.doe@example.com",
-        "roles": [
-          {
-            "name": "user"
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-### Roles and Permissions
-
-Get all available roles:
+Get fee estimation before executing transfers:
 
 ```graphql
-query Roles {
-  roles {
-    id
+query CalculateTransferFee($input: TransferFeeInput!) {
+  calculateTransferFee(input: $input) {
+    fee
+    symbol
+    network
+  }
+}
+```
+
+## Supported Cryptocurrencies
+
+The wallet dynamically supports cryptocurrencies and networks as provided by the 100Pay platform. To get the current list of supported wallets and their available networks, use:
+
+```graphql
+query GetSupportedWallets {
+  getSupportedWallets {
+    symbol
     name
-  }
-}
-```
-
-Response:
-
-```json
-{
-  "data": {
-    "roles": [
-      {
-        "id": "1",
-        "name": "user"
-      },
-      {
-        "id": "2",
-        "name": "admin"
-      }
-    ]
-  }
-}
-```
-
-### API Keys (Admin Only)
-
-Generate an API key for a user:
-
-```graphql
-mutation GenerateApiKey {
-  generateApiKey {
-    id
-    key
-    owner {
-      id
-      email
+    networks {
+      name
+      chainId
+      rpcUrl
+      blockExplorer
     }
-    createdAt
+    decimals
+    logoUrl
   }
 }
 ```
 
-Response:
+The SDK method `client.wallet.getSupportedWallets()` returns real-time information about:
 
-```json
-{
-  "data": {
-    "generateApiKey": {
-      "id": "123",
-      "key": "generated-api-key",
-      "owner": {
-        "id": "12345",
-        "email": "admin@example.com"
-      },
-      "createdAt": "2025-04-27T12:00:00.000Z"
-    }
-  }
-}
-```
+- Available cryptocurrency symbols and names
+- Supported blockchain networks for each currency
+- Network details (chain ID, RPC URLs, block explorers)
+- Token decimals and logo URLs
 
-## Features
+This ensures your wallet always supports the latest cryptocurrencies and networks available on the 100Pay platform without requiring code updates.
 
-- TypeScript Express API with GraphQL
-- MongoDB integration with Mongoose
-- JWT-based authentication system
-- Password reset functionality
-- Google OAuth integration
-- OTP verification
-- Role-based access control
-- API key generation
-- Docker configuration for development and production
-- Web Push notification support
-- Email service integration
+## Security Features
 
-## GraphQL Playground
+- **JWT Authentication**: Secure user sessions
+- **API Key Protection**: Additional layer of API security
+- **Transaction Verification**: Built-in transaction verification
+- **Real-time Validation**: Live balance and transaction validation
+- **Secure Key Management**: Environment-based API key storage
 
-Access the GraphQL playground at: <https://wallet-api.projects.aevr.space/graphql>
+## Error Handling
 
-## Common Errors
+Common error responses:
 
 - **401 Unauthorized**: Missing or invalid access token
-- **403 Forbidden**: Insufficient permissions
-- **404 Not Found**: Resource not found
-- **500 Internal Server Error**: Unexpected server error
+- **403 Forbidden**: Insufficient permissions or invalid API key
+- **404 Not Found**: Wallet or transaction not found
+- **400 Bad Request**: Invalid transfer parameters or insufficient balance
+- **500 Internal Server Error**: 100Pay API or server issues
 
-## Generated with @untools/starter
+## Development
 
-This project was scaffolded using [@untools/starter](https://www.npmjs.com/package/@untools/starter).
+### Project Structure
+
+```bash
+src/
+├── services/
+│   ├── userWallet.services.ts    # Wallet management
+│   └── transfer.services.ts      # Transfer operations
+├── utils/
+│   └── userWallet/
+│       └── balance.ts           # Balance calculations
+├── graphql/
+│   └── resolvers/
+│       ├── userWallet.resolvers.ts
+│       └── transfer.resolvers.ts
+└── types/
+    └── userWallet/              # TypeScript definitions
+```
+
+### Testing
+
+Run the development server and access the GraphQL playground at:
+
+```bash
+http://localhost:9872/graphql
+```
+
+## Production Deployment
+
+The API is deployed at:
+
+```bash
+https://wallet-api.projects.aevr.space/graphql
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project demonstrates the integration of 100Pay's subwallet API for educational and development purposes.
+
+---
+
+**Built with**: TypeScript, Express, GraphQL, MongoDB, and 100Pay SDK
+
+**Generated with**: [@untools/starter](https://www.npmjs.com/package/@untools/starter)
